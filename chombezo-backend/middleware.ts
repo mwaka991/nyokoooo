@@ -1,18 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+function normalizeOrigin(value?: string | null) {
+  if (!value) return '';
+  return value.trim().replace(/\/$/, '');
+}
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
+  normalizeOrigin(process.env.FRONTEND_URL),
   'http://localhost:8080',
   'http://localhost:3000',
   'http://127.0.0.1:8080',
   'http://127.0.0.1:3000',
-].filter(Boolean) as string[];
+].filter(Boolean);
 
 export function middleware(request: NextRequest) {
-  const origin = request.headers.get('origin');
+  const origin = normalizeOrigin(request.headers.get('origin'));
   const isAllowedOrigin = !!origin && allowedOrigins.includes(origin);
 
-  // Handle preflight requests
+  console.log('CORS origin:', origin);
+  console.log('Allowed origins:', allowedOrigins);
+  console.log('Method:', request.method);
+  console.log('Path:', request.nextUrl.pathname);
+
   if (request.method === 'OPTIONS') {
     const response = new NextResponse(null, { status: 204 });
 
