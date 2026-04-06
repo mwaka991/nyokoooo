@@ -39,9 +39,13 @@ async function apiCall<T>(
   const url = `${API_URL}${endpoint}`;
 
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
+
+  // Only add Content-Type for requests with a body
+  if (options.body) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   // Add auth token if available
   const token = localStorage.getItem('admin_token');
