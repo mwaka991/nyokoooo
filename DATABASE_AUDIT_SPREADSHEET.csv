@@ -1,0 +1,58 @@
+Table,Column,Data Type,Read By,Write By,Filter By,Operations,Status
+payments,id,UUID,getPaymentById,createPayment,updatePaymentStatus,READ/WRITE,✅ Used
+payments,provider,VARCHAR(50),createPayment (reads default),createPayment defaults to fastlipa,N/A,WRITE,✅ Used
+payments,provider_reference,VARCHAR(255),getPaymentByReference,createPayment,getPaymentByReference filters,READ/WRITE/FILTER,✅ Used
+payments,phone_number,VARCHAR(20),getAllPayments verify route,createPayment,N/A,READ/WRITE,✅ Used
+payments,amount_tsh,INTEGER,getPaymentById verify route validates,createPayment enforces 1000,N/A,READ/WRITE,✅ Used
+payments,status,VARCHAR(50),all functions check status,updatePaymentStatus sets,getAllPayments filters,READ/WRITE/FILTER,✅ Used
+payments,verified_at,TIMESTAMP,verify route checks,updatePaymentStatus sets,N/A,WRITE,✅ Used
+payments,paid_at,TIMESTAMP,NONE,NOT SET,N/A,UNUSED,⚠️ Unused
+payments,expires_at,TIMESTAMP,NONE,NOT SET,N/A,UNUSED,⚠️ Unused
+payments,metadata,JSONB,verify route reads session data,createPayment stores response,N/A,READ/WRITE,✅ Used
+payments,created_at,TIMESTAMP,getAllPayments orders by,DB default,N/A,READ,✅ Used
+payments,updated_at,TIMESTAMP,NOT READ,DB trigger auto-updates,N/A,AUTO,✅ Auto
+access_sessions,id,UUID,updateAccessSessionLastAccessed,createPremiumSession,updateAccessSessionLastAccessed,WRITE,✅ Used
+access_sessions,payment_id,UUID FK,NONE (schema only),NOT INSERTED,N/A,UNUSED,🔴 Missing
+access_sessions,phone_number,VARCHAR(20),NONE (schema only),NOT INSERTED,N/A,UNUSED,🔴 Missing
+access_sessions,user_identifier,VARCHAR(255),createPremiumSession reads all,createPremiumSession input,N/A,READ/WRITE,✅ Used
+access_sessions,session_token,VARCHAR(255),4 functions read,generateSessionToken creates,WHERE filtered,READ/WRITE/FILTER,✅ Used
+access_sessions,access_start_time,TIMESTAMP,NONE,createPremiumSession sets to NOW(),N/A,UNUSED,⚠️ Unused
+access_sessions,access_expiry_time,TIMESTAMP,checkAccessSession compares,createPremiumSession sets,WHERE checked,READ/WRITE,✅ Used
+access_sessions,expires_at,TIMESTAMP (ALIAS),checkAccessSession fallback,createPremiumSession duplicates,WHERE fallback,READ/WRITE,⚠️ Alias
+access_sessions,active,BOOLEAN,checkAccessSession checks,createPremiumSession TRUE invalidateSession FALSE,WHERE filtered,READ/WRITE,✅ Used
+access_sessions,is_active,BOOLEAN (DUPLICATE),countAccessSessions checks,createPremiumSession cleanupExpiredSessions,WHERE filtered,READ/WRITE,✅ Used
+access_sessions,last_accessed,TIMESTAMP,NOT DIRECTLY READ,createPremiumSession sets,N/A,WRITE,✅ Used
+access_sessions,accessed_at,TIMESTAMP (UNUSED),NOT READ,updateSessionLastAccessed sets,N/A,WRITE,⚠️ Unused
+access_sessions,created_at,TIMESTAMP,NONE,DB default,N/A,UNUSED,⚠️ Unused
+access_sessions,updated_at,TIMESTAMP,NOT READ,DB trigger,N/A,AUTO,✅ Auto
+categories,id,UUID,all category functions,createCategory,updateCategory deleteCategory,READ/WRITE,✅ Used
+categories,name,VARCHAR(255),all read ops,createCategory updateCategory,N/A,READ/WRITE,✅ Used
+categories,slug,VARCHAR(255),all reads include join,createCategory,WHERE equals (unique index),READ/WRITE/FILTER,✅ Used
+categories,description,TEXT,getCategoriesAdmin createCategory,createCategory updateCategory,N/A,READ/WRITE,✅ Used
+categories,is_premium,BOOLEAN,getCategoriesPublic isCategoryPremium,createCategory updateCategory,getCategoriesPublic filters,READ/WRITE/FILTER,✅ Used
+categories,is_active,BOOLEAN,ALL public queries filter,createCategory soft delete,WHERE filtered,READ/WRITE/FILTER,✅ Used
+categories,sort_order,INTEGER,all queries select,createCategory updateCategory,ORDER BY ascending,READ/WRITE/ORDER,✅ Used
+categories,created_at,TIMESTAMP,getCategoriesAdmin includes,DB default,N/A,READ,✅ Used
+categories,updated_at,TIMESTAMP,NOT READ,AUTO trigger soft delete,N/A,AUTO,✅ Auto
+videos,id,UUID,all queries,createVideo,all update/delete filters,READ/WRITE,✅ Used
+videos,category_id,UUID FK,canAccessVideo reads,createVideo,join with categories,READ/WRITE/JOIN,✅ Used
+videos,title,VARCHAR(255),all read operations,createVideo updateVideo,N/A,READ/WRITE,✅ Used
+videos,description,TEXT,all operations,createVideo updateVideo,N/A,READ/WRITE,✅ Used
+videos,thumbnail_url,VARCHAR(500),all read queries,createVideo updateVideo,N/A,READ/WRITE,✅ Used
+videos,video_url,VARCHAR(500),all read queries,createVideo updateVideo,N/A,READ/WRITE,✅ Used
+videos,is_active,BOOLEAN,all public filter,createVideo soft delete,WHERE filtered,READ/WRITE/FILTER,✅ Used
+videos,sort_order,INTEGER,all select,createVideo updateVideo,ORDER BY ascending,READ/WRITE/ORDER,✅ Used
+videos,views_count,INTEGER,NOT READ,NOT WRITTEN,N/A,UNUSED,⚠️ Unused
+videos,created_at,TIMESTAMP,all queries include,DB default,N/A,READ,✅ Used
+videos,updated_at,TIMESTAMP,NOT READ,AUTO trigger,N/A,AUTO,✅ Auto
+admins,id,UUID,getAdminByEmail updateAdminLastLogin,N/A,updateAdminLastLogin filters,READ/WRITE,✅ Used
+admins,email,VARCHAR(255),getAdminByEmail returns,N/A,WHERE equals (unique),READ/FILTER,✅ Used
+admins,password_hash,VARCHAR(255),password verification,N/A,N/A,READ,✅ Used
+admins,is_active,BOOLEAN,auth checks,N/A,implied in queries,READ,✅ Used
+admins,created_at,TIMESTAMP,NONE,DB default,N/A,UNUSED,⚠️ Unused
+admins,updated_at,TIMESTAMP,NOT READ,AUTO trigger,N/A,AUTO,✅ Auto
+admins,last_login_at,TIMESTAMP,NOT CURRENTLY READ,updateAdminLastLogin sets,N/A,WRITE,✅ Used
+settings,id,UUID,NONE,N/A,N/A,UNUSED,⚠️ Unused
+settings,key,VARCHAR(255),getSetting getAllSettings,updateSetting,WHERE equals (unique),READ/FILTER,✅ Used
+settings,value,TEXT,getSetting getAllSettings,updateSetting upsert,N/A,READ/WRITE,✅ Used
+settings,updated_at,TIMESTAMP,NONE,upserted,N/A,AUTO,✅ Auto
