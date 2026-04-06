@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { payments } from '@/lib/api-client';
+import { payments, API_URL } from '@/lib/api-client';
 import { PaymentVerifier } from './PaymentVerifier';
 import type { PaymentVerificationResult } from '@/lib/payment-polling-client';
 
 const PRICE_TSH = 1000;
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface PaymentModalProps {
   isOpen: boolean;
