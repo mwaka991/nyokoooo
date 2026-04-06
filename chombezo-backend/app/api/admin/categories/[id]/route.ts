@@ -4,6 +4,7 @@ import { requireAdminAuth } from '@/lib/admin-auth';
 import { parseInput, UpdateCategorySchema } from '@/lib/validation';
 import { createErrorResponse, ValidationError, CategoryNotFoundError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/lib/constants';
+export const dynamic = 'force-dynamic';
 
 export async function PUT(
   request: NextRequest,

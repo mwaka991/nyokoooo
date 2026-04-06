@@ -81,10 +81,7 @@ export async function GET(
     }
 
     // If payment is already settled, return cached result immediately
-    if (
-      payment.status === 'paid' ||
-      payment.status === 'success'
-    ) {
+    if (payment.status === 'paid') {
       const minutesRemaining = payment.metadata?.minutes_remaining || 0;
       
       return NextResponse.json(

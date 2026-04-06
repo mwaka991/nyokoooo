@@ -3,6 +3,7 @@ import { getCategoryBySlug } from '@/lib/db';
 import { createErrorResponse } from '@/lib/errors';
 import { HTTP_STATUS } from '@/lib/constants';
 import { CategoryNotFoundError } from '@/lib/errors';
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,

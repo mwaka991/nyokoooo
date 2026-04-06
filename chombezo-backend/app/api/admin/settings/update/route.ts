@@ -5,6 +5,7 @@ import { parseInput } from '@/lib/validation';
 import { z } from 'zod';
 import { createErrorResponse, ValidationError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/lib/constants';
+export const dynamic = 'force-dynamic';
 
 const UpdateSettingsSchema = z.object({
   premium_price: z

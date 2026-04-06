@@ -387,7 +387,7 @@ After expiry, user must:
 
 # FastLipa Configuration
 FASTLIPA_API_URL=https://api.fastlipa.com
-FASTLIPA_API_KEY=FastLipa_UX2wIH6xC2fyGPFsHCsY1DoBe
+FASTLIPA_API_KEY=your-fastlipa-api-key-here
 
 # Premium Access Duration
 PREMIUM_DURATION_MINUTES=60  # 1 hour

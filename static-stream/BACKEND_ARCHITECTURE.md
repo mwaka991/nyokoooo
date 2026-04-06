@@ -929,7 +929,7 @@ Secrets:
 ### FastLipa Configuration
 
 ```env
-FASTLIPA_API_KEY=FastLipa_UX2wIH6xC2fyGPFsHCsY1DoBe
+FASTLIPA_API_KEY=your-fastlipa-api-key-here
 FASTLIPA_API_URL=https://api.fastlipa.com
 FASTLIPA_WEBHOOK_SECRET=webhook_secret_key
 ```
@@ -1701,7 +1701,7 @@ SUPABASE_ANON_KEY=eyJhbGc...
 SUPABASE_SERVICE_KEY=eyJhbGc...
 
 # FastLipa Integration
-FASTLIPA_API_KEY=FastLipa_UX2wIH6xC2fyGPFsHCsY1DoBe
+FASTLIPA_API_KEY=your-fastlipa-api-key-here
 FASTLIPA_API_URL=https://api.fastlipa.com
 FASTLIPA_WEBHOOK_SECRET=webhook_secret_here
 

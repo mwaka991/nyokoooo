@@ -4,13 +4,16 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { JWTPayload } from '@/types';
 
-const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '24h';
 
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-  throw new Error(
-    'JWT_SECRET must be set and at least 32 characters long. Check your environment variables.'
-  );
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error(
+      'JWT_SECRET must be set and at least 32 characters long. Check your environment variables.'
+    );
+  }
+  return secret;
 }
 
 // ============================================================================
@@ -54,7 +57,7 @@ export function generateJWT(adminId: string, email: string): string {
     type: 'admin',
   };
 
-  return jwt.sign(payload, JWT_SECRET!, {
+  return jwt.sign(payload, getJwtSecret(), {
     expiresIn: JWT_EXPIRES_IN,
     algorithm: 'HS256',
   });
@@ -67,7 +70,7 @@ export function generateJWT(adminId: string, email: string): string {
  */
 export function verifyJWT(token: string): JWTPayload | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET!, {
+    const decoded = jwt.verify(token, getJwtSecret(), {
       algorithms: ['HS256'],
     });
 

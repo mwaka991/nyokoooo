@@ -4,6 +4,7 @@ import { requireAdminAuth } from '@/lib/admin-auth';
 import { parseInput, CreateVideoSchema } from '@/lib/validation';
 import { createErrorResponse, ValidationError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/lib/constants';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {

@@ -3,6 +3,7 @@ import { getPaymentByReference } from '@/lib/db';
 import { requireAdminAuth } from '@/lib/admin-auth';
 import { createErrorResponse, PaymentNotFoundError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/lib/constants';
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,

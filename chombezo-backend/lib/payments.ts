@@ -2,15 +2,16 @@
 
 import { FastLipaResponse } from '@/types';
 
-const FASTLIPA_API_URL = process.env.FASTLIPA_API_URL;
-const FASTLIPA_API_KEY = process.env.FASTLIPA_API_KEY;
-const MOCK_PAYMENTS = process.env.MOCK_PAYMENTS === 'true';
+function getFastLipaConfig() {
+  const fastlipaApiUrl = process.env.FASTLIPA_API_URL ?? '';
+  const fastlipaApiKey = process.env.FASTLIPA_API_KEY ?? '';
+  const mockPayments = process.env.MOCK_PAYMENTS === 'true';
 
-// For development: if mock mode is enabled, skip credential check
-if (!MOCK_PAYMENTS && (!FASTLIPA_API_URL || !FASTLIPA_API_KEY)) {
-  throw new Error(
-    'FastLipa configuration missing. Set FASTLIPA_API_URL and FASTLIPA_API_KEY, or enable MOCK_PAYMENTS=true for testing.'
-  );
+  if (!mockPayments && (!fastlipaApiUrl || !fastlipaApiKey)) {
+    throw new Error('FastLipa configuration missing. Set FASTLIPA_API_URL and FASTLIPA_API_KEY, or enable MOCK_PAYMENTS=true for testing.');
+  }
+
+  return { fastlipaApiUrl, fastlipaApiKey, mockPayments };
 }
 
 // ============================================================================
@@ -123,11 +124,13 @@ export async function createFastLipaPayment(
     // Normalize phone
     const phone = normalizePhoneNumber(input.phone_number);
 
+    const { fastlipaApiUrl, fastlipaApiKey, mockPayments } = getFastLipaConfig();
+
     // Generate unique reference
     const reference = generatePaymentReference();
 
     // DEVELOPMENT: Use mock payment for testing
-    if (MOCK_PAYMENTS) {
+    if (mockPayments) {
       console.log('🎭 MOCK MODE: Payment simulation', {
         phone,
         amount: input.amount_tsh,
@@ -145,7 +148,7 @@ export async function createFastLipaPayment(
     }
 
     // PRODUCTION: Call real FastLipa API
-    const endpoint = `${FASTLIPA_API_URL}/api/create-transaction`;
+    const endpoint = `${fastlipaApiUrl}/api/create-transaction`;
     const payload = {
       number: phone,
       amount: input.amount_tsh,
@@ -157,7 +160,7 @@ export async function createFastLipaPayment(
     console.log('═══════════════════════════════════════════════════════════');
     console.log('URL:', endpoint);
     console.log('Method: POST');
-    console.log('Auth Header: Bearer', FASTLIPA_API_KEY?.substring(0, 10) + '***');
+    console.log('Auth Header: Bearer', fastlipaApiKey?.substring(0, 10) + '***');
     console.log('Payload:', JSON.stringify(payload, null, 2));
     console.log('═══════════════════════════════════════════════════════════\n');
 
@@ -165,7 +168,7 @@ export async function createFastLipaPayment(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${FASTLIPA_API_KEY}`,
+        Authorization: `Bearer ${fastlipaApiKey}`,
       },
       body: JSON.stringify(payload),
     });
@@ -184,7 +187,7 @@ export async function createFastLipaPayment(
     console.log('═══════════════════════════════════════════════════════════\n');
     
     if (isHTML) {
-      throw new Error(`Wrong FastLipa endpoint or wrong request format. Got HTML response instead of JSON. Check FASTLIPA_API_URL: ${FASTLIPA_API_URL}`);
+      throw new Error(`Wrong FastLipa endpoint or wrong request format. Got HTML response instead of JSON. Check FASTLIPA_API_URL: ${fastlipaApiUrl}`);
     }
 
     if (!response.ok) {
@@ -262,8 +265,10 @@ export async function verifyFastLipaPayment(
       };
     }
 
+    const { fastlipaApiUrl, fastlipaApiKey, mockPayments } = getFastLipaConfig();
+
     // DEVELOPMENT: Use mock response for testing
-    if (MOCK_PAYMENTS) {
+    if (mockPayments) {
       console.log('🎭 MOCK MODE: Payment verification', {
         reference,
         mockStatus: 'success',
@@ -280,14 +285,14 @@ export async function verifyFastLipaPayment(
     }
 
     // PRODUCTION: Call real FastLipa API
-    const endpoint = `${FASTLIPA_API_URL}/api/status-transaction?tranid=${encodeURIComponent(reference)}`;
+    const endpoint = `${fastlipaApiUrl}/api/status-transaction?tranid=${encodeURIComponent(reference)}`;
     
     console.log('\n═══════════════════════════════════════════════════════════');
     console.log('🟢 FastLipa CHECK Transaction Status Request');
     console.log('═══════════════════════════════════════════════════════════');
     console.log('URL:', endpoint);
     console.log('Method: GET');
-    console.log('Auth Header: Bearer', FASTLIPA_API_KEY?.substring(0, 10) + '***');
+    console.log('Auth Header: Bearer', fastlipaApiKey?.substring(0, 10) + '***');
     console.log('Query Param tranid:', reference);
     console.log('═══════════════════════════════════════════════════════════\n');
 
@@ -295,7 +300,7 @@ export async function verifyFastLipaPayment(
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${FASTLIPA_API_KEY}`,
+        Authorization: `Bearer ${fastlipaApiKey}`,
       },
     });
 
@@ -316,7 +321,7 @@ export async function verifyFastLipaPayment(
     if (isHTML) {
       const error = new Error(
         `Wrong FastLipa endpoint or wrong request format. Got HTML ${response.status} instead of JSON. ` +
-        `Check FASTLIPA_API_URL: ${FASTLIPA_API_URL}/status-transaction . ` +
+        `Check fastlipaApiUrl: ${fastlipaApiUrl}/status-transaction . ` +
         `Response preview: ${responseText.substring(0, 200)}`
       );
       console.error('❌', error.message);

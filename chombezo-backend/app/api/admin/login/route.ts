@@ -4,6 +4,7 @@ import { verifyPassword, generateJWT, validateLoginInput } from '@/lib/auth';
 import { parseInput, LoginSchema } from '@/lib/validation';
 import { createErrorResponse, ValidationError, InvalidCredentialsError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/lib/constants';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {

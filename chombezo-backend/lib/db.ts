@@ -1,33 +1,37 @@
 // Production-ready Supabase client initialization
 
 import { createClient } from '@supabase/supabase-js';
+import { getRequiredEnv } from '@/lib/env';
+import { Admin, Payment } from '@/types';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+let supabaseClient: any = null;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Set SUPABASE_URL and SUPABASE_SERVICE_KEY'
-  );
+function getSupabaseClient(): any {
+  if (!supabaseClient) {
+    const supabaseUrl = getRequiredEnv('SUPABASE_URL');
+    const supabaseServiceKey = getRequiredEnv('SUPABASE_SERVICE_KEY');
+
+    supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }) as any;
+  }
+  return supabaseClient;
 }
-
-export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
 
 // ============================================================================
 // ADMIN QUERIES
 // ============================================================================
 
-export async function getAdminByEmail(email: string) {
-  const { data, error } = await supabase
-    .from('admins')
+export async function getAdminByEmail(email: string): Promise<Admin | null> {
+  const result = await getSupabaseClient().from('admins')
     .select('*')
     .eq('email', email)
     .single();
+
+  const { data, error } = result as { data: Admin | null; error: any };
 
   if (error) {
     if (error.code === 'PGRST116') {
@@ -40,8 +44,7 @@ export async function getAdminByEmail(email: string) {
 }
 
 export async function updateAdminLastLogin(adminId: string) {
-  const { error } = await supabase
-    .from('admins')
+  const { error } = await getSupabaseClient().from('admins')
     .update({ last_login_at: new Date().toISOString() })
     .eq('id', adminId);
 
@@ -53,8 +56,7 @@ export async function updateAdminLastLogin(adminId: string) {
 // ============================================================================
 
 export async function getCategoriesPublic(includePremium = true) {
-  let query = supabase
-    .from('categories')
+  let query = getSupabaseClient().from('categories')
     .select('id, name, slug, is_premium, sort_order')
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
@@ -69,8 +71,7 @@ export async function getCategoriesPublic(includePremium = true) {
 }
 
 export async function getCategoriesAdmin(limit = 20, offset = 0) {
-  const { data, error, count } = await supabase
-    .from('categories')
+  const { data, error, count } = await getSupabaseClient().from('categories')
     .select('id, name, slug, is_premium, is_active, sort_order, created_at', { count: 'exact' })
     .order('sort_order', { ascending: true })
     .range(offset, offset + limit - 1);
@@ -80,8 +81,7 @@ export async function getCategoriesAdmin(limit = 20, offset = 0) {
 }
 
 export async function getCategoryBySlug(slug: string) {
-  const { data, error } = await supabase
-    .from('categories')
+  const { data, error } = await getSupabaseClient().from('categories')
     .select('*')
     .eq('slug', slug)
     .eq('is_active', true)
@@ -92,8 +92,7 @@ export async function getCategoryBySlug(slug: string) {
 }
 
 export async function getCategoryById(id: string) {
-  const { data, error } = await supabase
-    .from('categories')
+  const { data, error } = await getSupabaseClient().from('categories')
     .select('*')
     .eq('id', id)
     .single();
@@ -110,8 +109,7 @@ export async function createCategory(input: {
   is_active: boolean;
   sort_order: number;
 }) {
-  const { data, error } = await supabase
-    .from('categories')
+  const { data, error } = await getSupabaseClient().from('categories')
     .insert(input)
     .select()
     .single();
@@ -124,8 +122,7 @@ export async function updateCategory(
   id: string,
   input: Partial<Omit<any, 'id' | 'created_at' | 'updated_at'>>
 ) {
-  const { data, error } = await supabase
-    .from('categories')
+  const { data, error } = await getSupabaseClient().from('categories')
     .update({
       ...input,
       updated_at: new Date().toISOString(),
@@ -140,11 +137,10 @@ export async function updateCategory(
 
 export async function deleteCategory(id: string, hardDelete = false) {
   if (hardDelete) {
-    const { error } = await supabase.from('categories').delete().eq('id', id);
+    const { error } = await getSupabaseClient().from('categories').delete().eq('id', id);
     if (error) throw new Error(`Failed to delete category: ${error.message}`);
   } else {
-    const { error } = await supabase
-      .from('categories')
+    const { error } = await getSupabaseClient().from('categories')
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', id);
 
@@ -157,8 +153,7 @@ export async function deleteCategory(id: string, hardDelete = false) {
 // ============================================================================
 
 export async function getVideosPublic(limit = 20, offset = 0) {
-  let query = supabase
-    .from('videos')
+  let query = getSupabaseClient().from('videos')
     .select('id, title, description, category_id, thumbnail_url, video_url, is_active, sort_order, created_at, categories(id, name, slug, is_premium)', { count: 'exact' })
     .eq('is_active', true)
     .order('sort_order', { ascending: true })
@@ -171,8 +166,7 @@ export async function getVideosPublic(limit = 20, offset = 0) {
 }
 
 export async function getVideosAdmin(limit = 50, offset = 0) {
-  const { data, error, count } = await supabase
-    .from('videos')
+  const { data, error, count } = await getSupabaseClient().from('videos')
     .select('id, title, description, category_id, thumbnail_url, video_url, is_active, sort_order, created_at', { count: 'exact' })
     .order('sort_order', { ascending: true })
     .range(offset, offset + limit - 1);
@@ -182,8 +176,7 @@ export async function getVideosAdmin(limit = 50, offset = 0) {
 }
 
 export async function getVideoById(id: string) {
-  const { data, error } = await supabase
-    .from('videos')
+  const { data, error } = await getSupabaseClient().from('videos')
     .select('id, title, description, category_id, thumbnail_url, video_url, is_active, sort_order, created_at, categories(id, name, slug, is_premium)')
     .eq('id', id)
     .single();
@@ -193,8 +186,7 @@ export async function getVideoById(id: string) {
 }
 
 export async function getVideosByCategory(categoryId: string, limit = 20, offset = 0) {
-  const { data, error, count } = await supabase
-    .from('videos')
+  const { data, error, count } = await getSupabaseClient().from('videos')
     .select('id, title, description, category_id, thumbnail_url, video_url, is_active, sort_order, created_at, categories(id, name, slug, is_premium)', { count: 'exact' })
     .eq('category_id', categoryId)
     .eq('is_active', true)
@@ -216,8 +208,7 @@ export async function createVideo(input: {
   is_active?: boolean;
   sort_order: number;
 }) {
-  const { data, error } = await supabase
-    .from('videos')
+  const { data, error } = await getSupabaseClient().from('videos')
     .insert({
       category_id: input.category_id,
       title: input.title,
@@ -240,8 +231,7 @@ export async function updateVideo(
   id: string,
   input: Partial<Omit<any, 'id' | 'created_at' | 'updated_at'>>
 ) {
-  const { data, error } = await supabase
-    .from('videos')
+  const { data, error } = await getSupabaseClient().from('videos')
     .update({
       ...input,
       updated_at: new Date().toISOString(),
@@ -256,11 +246,10 @@ export async function updateVideo(
 
 export async function deleteVideo(id: string, hardDelete = false) {
   if (hardDelete) {
-    const { error } = await supabase.from('videos').delete().eq('id', id);
+    const { error } = await getSupabaseClient().from('videos').delete().eq('id', id);
     if (error) throw new Error(`Failed to delete video: ${error.message}`);
   } else {
-    const { error } = await supabase
-      .from('videos')
+    const { error } = await getSupabaseClient().from('videos')
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', id);
 
@@ -280,8 +269,7 @@ export async function createPayment(input: {
   status?: string;
   metadata?: Record<string, any>;
 }) {
-  const { data, error } = await supabase
-    .from('payments')
+  const { data, error } = await getSupabaseClient().from('payments')
     .insert({
       provider: input.provider || 'fastlipa',
       provider_reference: input.provider_reference,
@@ -297,23 +285,25 @@ export async function createPayment(input: {
   return data;
 }
 
-export async function getPaymentById(id: string) {
-  const { data, error } = await supabase
-    .from('payments')
+export async function getPaymentById(id: string): Promise<Payment | null> {
+  const result = await getSupabaseClient().from('payments')
     .select('*')
     .eq('id', id)
     .single();
+
+  const { data, error } = result as { data: Payment | null; error: any };
 
   if (error) return null;
   return data;
 }
 
-export async function getPaymentByReference(reference: string) {
-  const { data, error } = await supabase
-    .from('payments')
+export async function getPaymentByReference(reference: string): Promise<Payment | null> {
+  const result = await getSupabaseClient().from('payments')
     .select('*')
     .eq('provider_reference', reference)
     .single();
+
+  const { data, error } = result as { data: Payment | null; error: any };
 
   if (error) return null;
   return data;
@@ -333,8 +323,7 @@ export async function updatePaymentStatus(
     update.verified_at = new Date().toISOString();
   }
 
-  const { data, error } = await supabase
-    .from('payments')
+  const { data, error } = await getSupabaseClient().from('payments')
     .update(update)
     .eq('id', id)
     .select()
@@ -355,8 +344,7 @@ export async function createAccessSession(input: {
   access_start_time: string;
   access_expiry_time: string;
 }) {
-  const { data, error } = await supabase
-    .from('access_sessions')
+  const { data, error } = await getSupabaseClient().from('access_sessions')
     .insert({
       payment_id: input.payment_id,
       session_token: input.session_token,
@@ -373,8 +361,7 @@ export async function createAccessSession(input: {
 }
 
 export async function getAccessSession(token: string) {
-  const { data, error } = await supabase
-    .from('access_sessions')
+  const { data, error } = await getSupabaseClient().from('access_sessions')
     .select('*')
     .eq('session_token', token)
     .eq('is_active', true)
@@ -386,8 +373,7 @@ export async function getAccessSession(token: string) {
 }
 
 export async function updateAccessSessionLastAccessed(sessionId: string) {
-  const { error } = await supabase
-    .from('access_sessions')
+  const { error } = await getSupabaseClient().from('access_sessions')
     .update({
       accessed_at: new Date().toISOString(),
     })
@@ -401,8 +387,7 @@ export async function updateAccessSessionLastAccessed(sessionId: string) {
 // ============================================================================
 
 export async function getSetting(key: string): Promise<string | null> {
-  const { data, error } = await supabase
-    .from('settings')
+  const { data, error } = await getSupabaseClient().from('settings')
     .select('value')
     .eq('key', key)
     .single();
@@ -412,7 +397,7 @@ export async function getSetting(key: string): Promise<string | null> {
 }
 
 export async function getAllSettings() {
-  const { data, error } = await supabase.from('settings').select('*');
+  const { data, error } = await getSupabaseClient().from('settings').select('*');
 
   if (error) throw new Error(`Failed to fetch settings: ${error.message}`);
 
@@ -425,8 +410,7 @@ export async function getAllSettings() {
 }
 
 export async function updateSetting(key: string, value: string) {
-  const { data, error } = await supabase
-    .from('settings')
+  const { data, error } = await getSupabaseClient().from('settings')
     .upsert({ key, value })
     .select()
     .single();
@@ -436,8 +420,7 @@ export async function updateSetting(key: string, value: string) {
 }
 
 export async function getAllPayments(limit = 50, offset = 0, status?: string) {
-  let query = supabase
-    .from('payments')
+  let query = getSupabaseClient().from('payments')
     .select('*', { count: 'exact' })
     .order('created_at', { ascending: false });
 
@@ -456,8 +439,7 @@ export async function getAllPayments(limit = 50, offset = 0, status?: string) {
 }
 
 export async function countVideos() {
-  const { count, error } = await supabase
-    .from('videos')
+  const { count, error } = await getSupabaseClient().from('videos')
     .select('*', { count: 'exact', head: true });
 
   if (error) throw new Error(`Failed to count videos: ${error.message}`);
@@ -465,8 +447,7 @@ export async function countVideos() {
 }
 
 export async function countCategories() {
-  const { count, error } = await supabase
-    .from('categories')
+  const { count, error } = await getSupabaseClient().from('categories')
     .select('*', { count: 'exact', head: true });
 
   if (error) throw new Error(`Failed to count categories: ${error.message}`);
@@ -474,7 +455,7 @@ export async function countCategories() {
 }
 
 export async function countPayments(status?: string) {
-  let query = supabase.from('payments').select('*', { count: 'exact', head: true });
+  let query = getSupabaseClient().from('payments').select('*', { count: 'exact', head: true });
 
   if (status) {
     query = query.eq('status', status);
@@ -487,8 +468,7 @@ export async function countPayments(status?: string) {
 }
 
 export async function countAccessSessions() {
-  const { count, error } = await supabase
-    .from('access_sessions')
+  const { count, error } = await getSupabaseClient().from('access_sessions')
     .select('*', { count: 'exact', head: true })
     .eq('is_active', true);
 

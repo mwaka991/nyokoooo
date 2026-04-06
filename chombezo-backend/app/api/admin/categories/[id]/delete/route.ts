@@ -3,6 +3,7 @@ import { deleteCategory, getCategoryById } from '@/lib/db';
 import { requireAdminAuth } from '@/lib/admin-auth';
 import { createErrorResponse, CategoryNotFoundError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/lib/constants';
+export const dynamic = 'force-dynamic';
 
 export async function DELETE(
   request: NextRequest,

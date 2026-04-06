@@ -10,19 +10,26 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { getRequiredEnv } from '@/lib/env';
 import { AccessSession } from '@/types';
 import { randomBytes } from 'crypto';
-import jwt from 'jsonwebtoken';
 import { createAccessSession } from '@/lib/db';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_KEY || ''
-);
+let supabaseClient: any = null;
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required');
+function getAccessSupabaseClient(): any {
+  if (!supabaseClient) {
+    const supabaseUrl = getRequiredEnv('SUPABASE_URL');
+    const supabaseServiceKey = getRequiredEnv('SUPABASE_SERVICE_KEY');
+
+    supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }) as any;
+  }
+  return supabaseClient;
 }
 
 // Session token prefix for security
@@ -64,8 +71,7 @@ export async function checkAccessSession(
       return null;
     }
 
-    const { data, error } = await supabase
-      .from('access_sessions')
+    const { data, error } = await getAccessSupabaseClient().from('access_sessions')
       .select('*')
       .eq('session_token', token)
       .eq('is_active', true)
@@ -81,8 +87,7 @@ export async function checkAccessSession(
 
     if (expiryDate < now) {
       // Session has expired - mark as inactive
-      await supabase
-        .from('access_sessions')
+      await getAccessSupabaseClient().from('access_sessions')
         .update({ is_active: false })
         .eq('id', data.id);
 
@@ -138,8 +143,7 @@ export async function canAccessVideo(
 ): Promise<boolean> {
   try {
     // Get video to check if it's premium
-    const { data: video, error: videoError } = await supabase
-      .from('videos')
+    const { data: video, error: videoError } = await getAccessSupabaseClient().from('videos')
       .select('is_premium, category_id')
       .eq('id', videoId)
       .single();
@@ -177,8 +181,7 @@ export async function canAccessVideo(
  */
 export async function isCategoryPremium(categoryId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('categories')
+    const { data, error } = await getAccessSupabaseClient().from('categories')
       .select('is_premium')
       .eq('id', categoryId)
       .single();
@@ -248,8 +251,7 @@ export async function createPremiumSession(
  */
 export async function invalidateSession(token: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('access_sessions')
+    const { error } = await getAccessSupabaseClient().from('access_sessions')
       .update({ is_active: false })
       .eq('session_token', token);
 
@@ -272,8 +274,7 @@ export async function updateSessionLastAccessed(
   token: string
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('access_sessions')
+    const { error } = await getAccessSupabaseClient().from('access_sessions')
       .update({ last_accessed: new Date().toISOString() })
       .eq('session_token', token)
       .eq('active', true);
@@ -302,8 +303,7 @@ export async function cleanupExpiredSessions(): Promise<number> {
   try {
     const now = new Date().toISOString();
 
-    const { data: expired, error: fetchError } = await supabase
-      .from('access_sessions')
+    const { data: expired, error: fetchError } = await getAccessSupabaseClient().from('access_sessions')
       .select('id')
       .eq('active', true)
       .or(`access_expiry_time.lt.${now},expires_at.lt.${now}`);
@@ -318,10 +318,9 @@ export async function cleanupExpiredSessions(): Promise<number> {
       return 0;
     }
 
-    const ids = expired.map((s) => s.id);
+    const ids = expired.map((s: { id: string }) => s.id);
 
-    const { error: updateError } = await supabase
-      .from('access_sessions')
+    const { error: updateError } = await getAccessSupabaseClient().from('access_sessions')
       .update({ is_active: false })
       .in('id', ids);
 

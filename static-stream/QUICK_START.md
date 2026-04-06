@@ -177,7 +177,7 @@ SUPABASE_URL=https://xxxxx.supabase.co
 SUPABASE_SERVICE_KEY=eyJhbGc...
 
 # FastLipa
-FASTLIPA_API_KEY=FastLipa_UX2wIH6xC2fyGPFsHCsY1DoBe
+FASTLIPA_API_KEY=your-fastlipa-api-key-here
 FASTLIPA_API_URL=https://api.fastlipa.com
 
 # JWT

@@ -4,6 +4,7 @@ import { requireAdminAuth } from '@/lib/admin-auth';
 import { parseInput, UpdateVideoSchema } from '@/lib/validation';
 import { createErrorResponse, ValidationError, VideoNotFoundError } from '@/lib/errors';
 import { HTTP_STATUS } from '@/lib/constants';
+export const dynamic = 'force-dynamic';
 
 export async function PUT(
   request: NextRequest,

@@ -3,6 +3,7 @@ import { getAllSettings } from '@/lib/db';
 import { requireAdminAuth } from '@/lib/admin-auth';
 import { createErrorResponse } from '@/lib/errors';
 import { HTTP_STATUS } from '@/lib/constants';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

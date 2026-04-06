@@ -222,7 +222,7 @@ FastLipa response missing payment_status field: {...}
 cat .env.local | grep FASTLIPA
 # Should show:
 # FASTLIPA_API_URL=https://api.fastlipa.com
-# FASTLIPA_API_KEY=FastLipa_UX2wIH6xC2fyGPFsHCsY1DoBe
+# FASTLIPA_API_KEY=your-fastlipa-api-key-here
 # MOCK_PAYMENTS=false
 ```
 
