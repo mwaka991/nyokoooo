@@ -142,7 +142,7 @@ const Index = () => {
         <div className="text-center">
           <p className="text-destructive mb-4">{error}</p>
           <p className="text-muted-foreground text-sm">
-            Make sure the backend is running at http://localhost:3000
+            Failed to load data from API
           </p>
         </div>
       </div>

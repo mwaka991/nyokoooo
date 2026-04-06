@@ -26,6 +26,16 @@ async function apiCall<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
+  if (!API_URL) {
+    return {
+      success: false,
+      error: {
+        code: 'CONFIG_ERROR',
+        message: 'API URL not configured',
+      },
+    };
+  }
+
   const url = `${API_URL}${endpoint}`;
 
   const headers: HeadersInit = {
